@@ -13,15 +13,23 @@ public class mqttManager : MonoBehaviour
 {
 	private MqttClient client;
 
+	enum AddressFormat
+	{
+		_ipAddress,
+		_domainAddress,
+	};
+
 	[Header("MQTT broker configuration")]
+	[Tooltip("Address Format")]
+	[SerializeField] private AddressFormat _addressFormat;
 	[Tooltip("IP address or URL of the host running the broker")]
 	[SerializeField] private string _brokerAddress = "127.0.0.1";
 	[Tooltip("Port where the broker accepts connections")]
 	[SerializeField] private int _brokerPort = 1883;
-	
+
 	[Header("[On Start only] Subscribe configuration")]
 	[Tooltip("Subscribe to the topic")]
-	[SerializeField] private string _subTopic = "test";
+	[SerializeField] public string _subTopic;
 	[SerializeField] private string[] _subTopicList;
 	[Tooltip("Subscribe Quality of Service Level")]
 	[SerializeField][Range(0, 2)] private int _subQos;
@@ -38,6 +46,10 @@ public class mqttManager : MonoBehaviour
 	[SerializeField] private bool _isRetain = false;
 	[Tooltip("Publish Messages")]
 	[SerializeField] private string _publishMessage = "Test Messages";
+
+	[Header("Feedback")]
+	[HideInInspector] public string _mobilityTopic = "RobotToUnity/mobility";
+	public string _mobilityMessage = "0 0 0";
 
 	// Use this for initialization
 	void Start()
@@ -71,8 +83,18 @@ public class mqttManager : MonoBehaviour
 
 	void CreateMQTTClient()
     {
-		// create client instance 
-		client = new MqttClient(IPAddress.Parse(_brokerAddress), _brokerPort, false, null);
+		// Create client instance
+			// IP Address
+		if (_addressFormat == AddressFormat._ipAddress)
+        {
+			client = new MqttClient(IPAddress.Parse(_brokerAddress), _brokerPort, false, null);
+		}
+			// Domain name
+		if (_addressFormat == AddressFormat._domainAddress)
+        {
+			client = new MqttClient( _brokerAddress , _brokerPort, false, null);
+        }
+
 		// register to message received 
 		client.MqttMsgPublishReceived += client_MqttMsgPublishReceived;
 
@@ -84,7 +106,7 @@ public class mqttManager : MonoBehaviour
     {
 		if (_subTopic != null)
         {
-			// subscribe to the topic 
+			// Subscribe to the topic 
 			client.Subscribe(new string[] { _subTopic }, new byte[] { _subQoSLevel });
 			Debug.Log("Subscribe Topic : " + _subTopic + " QoS : " + _subQos);
 		}
@@ -104,9 +126,15 @@ public class mqttManager : MonoBehaviour
         }
 	}
 
-	void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+	public void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
 	{
-		Debug.Log("Received: " + System.Text.Encoding.UTF8.GetString(e.Message));
+		Debug.Log("Received : " + System.Text.Encoding.UTF8.GetString(e.Message) + " | Topic : " + e.Topic);
+
+		if (e.Topic == _mobilityTopic)
+        {
+			_mobilityMessage = System.Text.Encoding.UTF8.GetString(e.Message);
+		}
+		
 	}
 
 	void client_MqttMsgPublishSent()
