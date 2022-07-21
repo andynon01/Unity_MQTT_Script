@@ -96,19 +96,19 @@ public class mqttManager : MonoBehaviour
 	{
 		UpdateFromInspector();
 
-		//Test Publish
-        if (_pubMessage != null)
-		{
-			if (Input.GetKeyDown("p"))
-			{
-				client_MqttMsgPublishSent();
-			}
-			if (Input.GetKeyDown("c"))
-			{
-				ClearLog();
-			}
-		}
-	}
+        //Test Publish
+        //if (_pubMessage != null)
+        //{
+        //	if (Input.GetKeyDown("p"))
+        //	{
+        //		client_MqttMsgPublishSent();
+        //	}
+        //	if (Input.GetKeyDown("c"))
+        //	{
+        //		ClearLog();
+        //	}
+        //}
+    }
 
 	void CreateMQTTClient()
     {

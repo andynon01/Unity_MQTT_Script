@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class mqttMobility : MonoBehaviour
 {
@@ -33,30 +34,30 @@ public class mqttMobility : MonoBehaviour
         MobilityCobineMessage();
 
         //Test Publish
-        if (_mqttManager._pubTopic == _mqttManager._mobilityPubTopic)
-        {
-            if (Input.GetKeyDown("w"))
-            {
-                mob_Pub_Vy = 1;
-            }
-            if (Input.GetKeyDown("x"))
-            {
-                mob_Pub_Vy = -1;
-            }
-            if (Input.GetKeyDown("s"))
-            {
-                mob_Pub_Vx = 0;
-                mob_Pub_Vy = 0;
-            }
-            if (Input.GetKeyDown("a"))
-            {
-                mob_Pub_Vx = -1;
-            }
-            if (Input.GetKeyDown("d"))
-            {
-                mob_Pub_Vx = 1;
-            }
-        }
+        //if (_mqttManager._pubTopic == _mqttManager._mobilityPubTopic)
+        //{
+        //    if (Input.GetKeyDown("w"))
+        //    {
+        //        mob_Pub_Vy = 1;
+        //    }
+        //    if (Input.GetKeyDown("x"))
+        //    {
+        //        mob_Pub_Vy = -1;
+        //    }
+        //    if (Input.GetKeyDown("s"))
+        //    {
+        //        mob_Pub_Vx = 0;
+        //        mob_Pub_Vy = 0;
+        //    }
+        //    if (Input.GetKeyDown("a"))
+        //    {
+        //        mob_Pub_Vx = -1;
+        //    }
+        //    if (Input.GetKeyDown("d"))
+        //    {
+        //        mob_Pub_Vx = 1;
+        //    }
+        //}
 
     }
 
@@ -102,6 +103,20 @@ public class mqttMobility : MonoBehaviour
             }
         }
         
+    }
+
+    public void MoveMode1(InputAction.CallbackContext context)
+    {
+        Vector2 movement = context.ReadValue<Vector2>();
+        mob_Pub_Vx = movement.x;
+        mob_Pub_Vy = movement.y;
+        Debug.Log(movement);
+    }
+
+    public void StopMove(InputAction.CallbackContext context)
+    {
+        int stop = context.ReadValue<int>();
+        Debug.Log(stop);
     }
 
 }
