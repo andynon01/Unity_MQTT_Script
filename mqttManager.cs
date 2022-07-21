@@ -34,28 +34,41 @@ public class mqttManager : MonoBehaviour
 	[Tooltip("Subscribe Quality of Service Level")]
 	[SerializeField][Range(0, 2)] private int _subQos;
 	private byte _subQoSLevel;
+	private string _unsubTopic;
 
 	[Header("Publish configuration")]
 	[Tooltip("Publish to the topic")]
-	[SerializeField] private string _publishTopic = "test";
+	[SerializeField] public string _pubTopic;
 	[Tooltip("Publish Quality of Service Level")]
-	[SerializeField][Range(0, 2)] private int _publishQos;
-	private byte _publishQoSLevel;
-	private int _publishQos_Previous;
+	[SerializeField][Range(0, 2)] private int _pubQos;
+	private byte _pubQoSLevel;
+	private int _pubQos_Previous;
 	[Tooltip("Retained Message")]
 	[SerializeField] private bool _isRetain = false;
 	[Tooltip("Publish Messages")]
-	[SerializeField] private string _publishMessage = "Test Messages";
+	[SerializeField] public string _pubMessage = "Test Messages";
 
-	[Header("Feedback")]
-	[HideInInspector] public string _mobilityTopic = "RobotToUnity/mobility";
-	public string _mobilityMessage = "0 0 0";
+	[Header("Data Tranfer Frequency")]
+	[Tooltip("Send/Recieve Frequency [Hz]")]
+	public int _frequency = 100;
+	[HideInInspector] public bool _isStamp;
+	private float _timeStamp;
+	
+	[Header("Mobility")]
+	public string _mobilitySubMessage = "0 0 0";
+	[HideInInspector] public string _mobilitySubTopic = "RobotToUnity/mobility";
+	public string _mobilityPubMessage = "0 0 0";
+	[HideInInspector] public string _mobilityPubTopic = "RobotToUnity/mobility";
+
 
 	// Use this for initialization
 	void Start()
 	{
+		// Time Stamp
+		_timeStamp = 0;
+
 		// Add Check Variable
-		_publishQos_Previous = _publishQos;
+		_pubQos_Previous = _pubQos;
 
 		// Tranform QoS in Inspector to QoS Level in MQTT Library
 		TranformQoSLevel();
@@ -64,13 +77,29 @@ public class mqttManager : MonoBehaviour
 
 	}
 
-	private void Update()
+    private void FixedUpdate()
+    {
+		// Time Counter & Tranfer Data Frequency
+		if (Time.fixedTime - _timeStamp >= 1 / (float)_frequency)
+		{
+			_isStamp = true;
+			_timeStamp = Time.fixedTime;
+		}
+		else
+		{
+			_isStamp = false;
+		}
+
+	}
+
+    private void Update()
 	{
 		UpdateFromInspector();
 
-		if (_publishMessage != null)
+		//Test Publish
+        if (_pubMessage != null)
 		{
-			if (Input.GetKeyDown("s"))
+			if (Input.GetKeyDown("p"))
 			{
 				client_MqttMsgPublishSent();
 			}
@@ -84,35 +113,30 @@ public class mqttManager : MonoBehaviour
 	void CreateMQTTClient()
     {
 		// Create client instance
-			// IP Address
+		// IP Address
 		if (_addressFormat == AddressFormat._ipAddress)
         {
 			client = new MqttClient(IPAddress.Parse(_brokerAddress), _brokerPort, false, null);
 		}
-			// Domain name
+		// Domain name
 		if (_addressFormat == AddressFormat._domainAddress)
         {
 			client = new MqttClient( _brokerAddress , _brokerPort, false, null);
         }
 
-		// register to message received 
+		// Register to message received 
 		client.MqttMsgPublishReceived += client_MqttMsgPublishReceived;
 
 		string clientId = Guid.NewGuid().ToString();
 		client.Connect(clientId);
 	}
 
-	void SubscribeToTopic()
+	public void SubscribeToTopic()
     {
 		if (_subTopic != null)
         {
 			// Subscribe to the topic 
 			client.Subscribe(new string[] { _subTopic }, new byte[] { _subQoSLevel });
-			Debug.Log("Subscribe Topic : " + _subTopic + " QoS : " + _subQos);
-		}
-        else
-        {
-			client.Subscribe(new string[] { "Null" }, new byte[] { _subQoSLevel });
 			Debug.Log("Subscribe Topic : " + _subTopic + " QoS : " + _subQos);
 		}
 
@@ -130,41 +154,56 @@ public class mqttManager : MonoBehaviour
 	{
 		Debug.Log("Received : " + System.Text.Encoding.UTF8.GetString(e.Message) + " | Topic : " + e.Topic);
 
-		if (e.Topic == _mobilityTopic)
-        {
-			_mobilityMessage = System.Text.Encoding.UTF8.GetString(e.Message);
+		if (e.Topic == _mobilitySubTopic)
+		{
+			_mobilitySubMessage = System.Text.Encoding.UTF8.GetString(e.Message);
 		}
 		
 	}
 
-	void client_MqttMsgPublishSent()
+	public void client_MqttMsgPublishSent()
     {
-		Debug.Log("publishing...");
-		client.Publish(_publishTopic, System.Text.Encoding.UTF8.GetBytes( _publishMessage ), _publishQoSLevel, _isRetain);
-		Debug.Log("published");
+		if (_isStamp)
+		{
+			Debug.Log("publishing...");
+			client.Publish(_pubTopic, System.Text.Encoding.UTF8.GetBytes(_pubMessage), _pubQoSLevel, _isRetain);
+			Debug.Log("published");
+		}
+		
 	}
 
 	void UpdateFromInspector()
     {
-		if (_publishQos_Previous != _publishQos)
+		if (_pubQos_Previous != _pubQos)
 		{
 			TranformQoSLevel();
-			_publishQos_Previous = _publishQos;
+			_pubQos_Previous = _pubQos;
 		}
-	}
+
+        UnsubscribeTopic();
+    }
 
 	// Tranform QoS in Inspector to QoS Level in MQTT Library
 	void TranformQoSLevel()
 	{
-		if (_publishQos == 0) { _publishQoSLevel = MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE; }
-		if (_publishQos == 1) { _publishQoSLevel = MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE; }
-		if (_publishQos == 2) { _publishQoSLevel = MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE; }
+		if (_pubQos == 0) { _pubQoSLevel = MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE; }
+		if (_pubQos == 1) { _pubQoSLevel = MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE; }
+		if (_pubQos == 2) { _pubQoSLevel = MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE; }
 		if (_subQos == 0) { _subQoSLevel = MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE; }
 		if (_subQos == 1) { _subQoSLevel = MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE; }
 		if (_subQos == 2) { _subQoSLevel = MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE; }
 	}
 
-	void ClearLog()
+    void UnsubscribeTopic()
+    {
+        if (_unsubTopic != null)
+        {
+            client.Unsubscribe(new string[] { _unsubTopic });
+        }
+
+    }
+
+    void ClearLog()
 	{
 		var assembly = Assembly.GetAssembly(typeof(UnityEditor.Editor));
 		var type = assembly.GetType("UnityEditor.LogEntries");
