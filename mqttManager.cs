@@ -37,6 +37,7 @@ public class mqttManager : MonoBehaviour
 	private string _unsubTopic;
 
 	[Header("Publish configuration")]
+	public bool _allowPublish = false;
 	[Tooltip("Publish to the topic")]
 	[SerializeField] public string _pubTopic;
 	[Tooltip("Publish Quality of Service Level")]
@@ -56,13 +57,13 @@ public class mqttManager : MonoBehaviour
 	
 	[Header("Mobility")]
 	public string _mobilitySubMessage = "0 0 0";
-	[HideInInspector] public string _mobilitySubTopic = "RobotToUnity/mobility";
+	public string _mobilitySubTopic = "RobotFeedback/mobility";
 	public string _mobilityPubMessage = "0 0 0";
-	[HideInInspector] public string _mobilityPubTopic = "RobotToUnity/mobility";
+	public string _mobilityPubTopic = "UnityToRobot/mobility";
 
 
 	// Use this for initialization
-	void Start()
+	private void Start()
 	{
 		// Time Stamp
 		_timeStamp = 0;
@@ -84,6 +85,7 @@ public class mqttManager : MonoBehaviour
 		{
 			_isStamp = true;
 			_timeStamp = Time.fixedTime;
+
 		}
 		else
 		{
@@ -163,13 +165,13 @@ public class mqttManager : MonoBehaviour
 
 	public void client_MqttMsgPublishSent()
     {
-		if (_isStamp)
+		if (_isStamp && _allowPublish)
 		{
-			Debug.Log("publishing...");
 			client.Publish(_pubTopic, System.Text.Encoding.UTF8.GetBytes(_pubMessage), _pubQoSLevel, _isRetain);
+
 			Debug.Log("published");
 		}
-		
+
 	}
 
 	void UpdateFromInspector()
@@ -203,7 +205,7 @@ public class mqttManager : MonoBehaviour
 
     }
 
-    void ClearLog()
+    public void ClearLog()
 	{
 		var assembly = Assembly.GetAssembly(typeof(UnityEditor.Editor));
 		var type = assembly.GetType("UnityEditor.LogEntries");

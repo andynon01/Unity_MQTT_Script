@@ -17,6 +17,8 @@ public class mqttMobility : MonoBehaviour
     private string mob_preSubMessage;
     private string mob_prePubMessage;
 
+    private bool _zeroHandle = false;
+
     private void Start()
     {
         _mqttManager = this.gameObject.GetComponent<mqttManager>();
@@ -76,31 +78,43 @@ public class mqttMobility : MonoBehaviour
 
             mob_preSubMessage = _mqttManager._mobilitySubMessage;
 
-            Debug.Log("Vx: " + mob_Feedback_Vx + " | Vy: " + mob_Feedback_Vy + " | W: " + mob_Feedback_W);
+            //Debug.Log("Vx: " + mob_Feedback_Vx + " | Vy: " + mob_Feedback_Vy + " | W: " + mob_Feedback_W);
         }
 
     }
 
     void MobilityCobineMessage()
     {
-        if (mob_Pub_Vx != mob_prePubMessage[0] || mob_Pub_Vy != mob_prePubMessage[1] || mob_Pub_W != mob_prePubMessage[2])
+        if (mob_Pub_Vx != _mqttManager._mobilityPubMessage[0] || mob_Pub_Vy != _mqttManager._mobilityPubMessage[1] || mob_Pub_W != _mqttManager._mobilityPubMessage[2])
         {
             _mqttManager._mobilityPubMessage = mob_Pub_Vx + " " + mob_Pub_Vy + " " + mob_Pub_W;
             MobilityPublishMessage();
-            mob_prePubMessage = _mqttManager._mobilityPubMessage;
         }
 
     }
 
     void MobilityPublishMessage()
     {
-        if (_mqttManager._mobilityPubMessage != mob_prePubMessage)
+        if (_mqttManager._pubTopic == _mqttManager._mobilityPubTopic)
         {
-            if (_mqttManager._pubTopic == _mqttManager._mobilityPubTopic)
+            // Control same message
+            if (_mqttManager._pubMessage != _mqttManager._mobilityPubMessage)
             {
                 _mqttManager._pubMessage = _mqttManager._mobilityPubMessage;
                 _mqttManager.client_MqttMsgPublishSent();
+
+                _zeroHandle = true;
             }
+
+            if (_mqttManager._mobilityPubMessage == "0 0 0" && _zeroHandle == true)
+            {
+                _mqttManager._pubMessage = "0 0 0";
+                _mqttManager.client_MqttMsgPublishSent();
+
+                _zeroHandle = false;
+            }
+            
+            
         }
         
     }
@@ -108,15 +122,28 @@ public class mqttMobility : MonoBehaviour
     public void MoveMode1(InputAction.CallbackContext context)
     {
         Vector2 movement = context.ReadValue<Vector2>();
-        mob_Pub_Vx = movement.x;
-        mob_Pub_Vy = movement.y;
-        Debug.Log(movement);
+        mob_Pub_Vx = movement.y;
+        mob_Pub_Vy = movement.x;
+
+        //Debug.Log(movement);
+    }
+
+    public void RotateMode1(InputAction.CallbackContext context)
+    {
+        float angularVelocity = context.ReadValue<float>();
+        mob_Pub_W = angularVelocity;
+
+        //Debug.Log(angularVelocity);
     }
 
     public void StopMove(InputAction.CallbackContext context)
     {
-        int stop = context.ReadValue<int>();
-        Debug.Log(stop);
+        mob_Pub_Vx = 0;
+        mob_Pub_Vy = 0;
+        mob_Pub_W = 0;
+        _mqttManager.client_MqttMsgPublishSent();
+
+        Debug.Log("Stop");
     }
 
 }
