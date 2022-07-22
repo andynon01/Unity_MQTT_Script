@@ -35,35 +35,9 @@ public class mqttMobility : MonoBehaviour
         MobilitySplitMessage();
         MobilityCobineMessage();
 
-        //Test Publish
-        //if (_mqttManager._pubTopic == _mqttManager._mobilityPubTopic)
-        //{
-        //    if (Input.GetKeyDown("w"))
-        //    {
-        //        mob_Pub_Vy = 1;
-        //    }
-        //    if (Input.GetKeyDown("x"))
-        //    {
-        //        mob_Pub_Vy = -1;
-        //    }
-        //    if (Input.GetKeyDown("s"))
-        //    {
-        //        mob_Pub_Vx = 0;
-        //        mob_Pub_Vy = 0;
-        //    }
-        //    if (Input.GetKeyDown("a"))
-        //    {
-        //        mob_Pub_Vx = -1;
-        //    }
-        //    if (Input.GetKeyDown("d"))
-        //    {
-        //        mob_Pub_Vx = 1;
-        //    }
-        //}
-
     }
 
-    // Split Massages
+    // Split Messages
     void MobilitySplitMessage()
     {
         if (_mqttManager._mobilitySubMessage != mob_preSubMessage)
@@ -83,6 +57,7 @@ public class mqttMobility : MonoBehaviour
 
     }
 
+    // Combine Messages
     void MobilityCobineMessage()
     {
         if (mob_Pub_Vx != _mqttManager._mobilityPubMessage[0] || mob_Pub_Vy != _mqttManager._mobilityPubMessage[1] || mob_Pub_W != _mqttManager._mobilityPubMessage[2])
@@ -108,7 +83,9 @@ public class mqttMobility : MonoBehaviour
 
             if (_mqttManager._mobilityPubMessage == "0 0 0" && _zeroHandle == true)
             {
-                _mqttManager._pubMessage = "0 0 0";
+                mob_Pub_Vx = 0;
+                mob_Pub_Vy = 0;
+                mob_Pub_W = 0;
                 _mqttManager.client_MqttMsgPublishSent();
 
                 _zeroHandle = false;
