@@ -29,9 +29,6 @@ public class MqttManager : MonoBehaviour
 
 	[Header("[On Start only] Subscribe configuration")]
 	[Tooltip("Subscribe to the topic")]
-	//[SerializeField] public string _subTopic;
-	//[Tooltip("Subscribe Quality of Service Level")]
-	//[SerializeField] [Range(0, 2)] private int _subQos;
 	[SerializeField] public string[] _subTopicList;
 	[Tooltip("Lenght on this List must equal to SubTopicList")]
 	[SerializeField][Range(0, 2)] public int[] _subQosList;
@@ -58,10 +55,10 @@ public class MqttManager : MonoBehaviour
 	private float _timeStamp;
 	
 	[Header("Mobility")]
-	public string _mobilitySubTopic = "RobotFeedback/mobility";
-	public string _mobilitySubMessage = "0 0 0";
-	public string _mobilityPubTopic = "UnityToRobot/mobility";
-	public string _mobilityPubMessage = "0 0 0";
+	public string _mobilitySubTopic = "mobot/unity/mobility";
+	public string _mobilitySubMessage;
+	public string _mobilityPubTopic;
+	public string _mobilityPubMessage;
 	
 	[Header("LiDAR")]
 	public string _lidarSubTopic;
@@ -79,15 +76,35 @@ public class MqttManager : MonoBehaviour
 	public string _gripperPubTopic;
 	public string _gripperPubMessage;
 
-	[Header("Camera Rotation")]
+	[Header("Camera")]
 	public string _cameraSubTopic;
 	public string _cameraSubMessage;
 	public string _cameraPubTopic;
 	public string _cameraPubMessage;
 
-	// Use this for initialization
 	private void Start()
 	{
+        // Set Subscribe Topic
+        _mobilitySubTopic = "mobot/unity/mobility";
+        _mobilityPubTopic = "unity/mobot/mobility";
+
+        _lidarSubTopic = "mobot/unity/lidar";
+
+		_manipulatorSubTopic = "mobot/unity/manipulator";
+		_manipulatorPubTopic = "unity/mobot/manipulator";
+
+		_gripperSubTopic = "mobot/unity/gripper";
+		_gripperPubTopic = "unity/mobot/gripper";
+
+		_cameraSubTopic = "mobot/unity/camera";
+		_cameraPubTopic = "unity/mobot/camera";
+
+		_subTopicList[0] = _mobilitySubTopic;
+		_subTopicList[1] = _lidarSubTopic;
+		_subTopicList[2] = _manipulatorSubTopic;
+		_subTopicList[3] = _gripperSubTopic;
+		_subTopicList[4] = _cameraSubTopic;
+
 		// Time Stamp
 		_timeStamp = 0;
 
@@ -146,15 +163,6 @@ public class MqttManager : MonoBehaviour
 
 	public void SubscribeToTopic()
     {
-		/*
-		if (_subTopic != null)
-        {
-			// Subscribe to the topic 
-			client.Subscribe(new string[] { _subTopic }, new byte[] { _subQoSLevel });
-			Debug.Log("Subscribe Topic : " + _subTopic + " QoS : " + _subQos);
-		}
-		*/
-
 		if (_subTopicList.Length > 0)
         {
 			for (int i = 0; i < _subTopicList.Length; i++)

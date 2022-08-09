@@ -6,15 +6,15 @@ public class MqttLiDAR : MonoBehaviour
 {
     public MqttManager _mqttManager;
 
-    [Header("LiDAR")]
-    public string lidar_N;
-    public string lidar_NE;
-    public string lidar_E;
-    public string lidar_SE;
-    public string lidar_S;
-    public string lidar_SW;
-    public string lidar_W;
-    public string lidar_NW;
+    [Header("LiDAR Feedback")]
+    public string lidar_N = "ok";
+    public string lidar_NE = "ok";
+    public string lidar_E = "ok";
+    public string lidar_SE = "ok";
+    public string lidar_S = "ok";
+    public string lidar_SW = "ok";
+    public string lidar_W = "ok";
+    public string lidar_NW = "ok";
 
     private LiDARData _lidarData;
 
@@ -22,14 +22,14 @@ public class MqttLiDAR : MonoBehaviour
 
     public class LiDARData
     {
-        public string n;
-        public string ne;
-        public string e;
-        public string se;
-        public string s;
-        public string sw;
-        public string w;
-        public string nw;
+        public string lidar_q1;
+        public string lidar_q2;
+        public string lidar_q3;
+        public string lidar_q4;
+        public string lidar_q5;
+        public string lidar_q6;
+        public string lidar_q7;
+        public string lidar_q8;
 
     }
 
@@ -47,17 +47,16 @@ public class MqttLiDAR : MonoBehaviour
         lidar_preSubMessage = _mqttManager._lidarSubMessage;
         
         _lidarData = new LiDARData();
-        _lidarData.n = "ok";
-        _lidarData.ne = "ok";
-        _lidarData.e = "ok";
-        _lidarData.se = "ok";
-        _lidarData.s = "ok";
-        _lidarData.sw = "ok";
-        _lidarData.w = "ok";
-        _lidarData.nw = "ok";
+        _lidarData.lidar_q1 = "ok";
+        _lidarData.lidar_q2 = "ok";
+        _lidarData.lidar_q3 = "ok";
+        _lidarData.lidar_q4 = "ok";
+        _lidarData.lidar_q5 = "ok";
+        _lidarData.lidar_q6 = "ok";
+        _lidarData.lidar_q7 = "ok";
+        _lidarData.lidar_q8 = "ok";
+        _mqttManager._lidarSubMessage = JsonUtility.ToJson(_lidarData);
 
-        // Test
-        _mqttManager._cameraPubMessage = JsonUtility.ToJson(_lidarData);
     }
 
     private void Update()
@@ -72,14 +71,14 @@ public class MqttLiDAR : MonoBehaviour
         if (lidar_preSubMessage != _mqttManager._lidarSubMessage)
         {
             _lidarData = JsonUtility.FromJson<LiDARData>(_mqttManager._lidarSubMessage);
-            lidar_N = _lidarData.n;
-            lidar_NE = _lidarData.ne;
-            lidar_E = _lidarData.e;
-            lidar_SE = _lidarData.se;
-            lidar_S = _lidarData.s;
-            lidar_SW = _lidarData.sw;
-            lidar_W = _lidarData.w;
-            lidar_NW = _lidarData.nw;
+            lidar_N = _lidarData.lidar_q1;
+            lidar_NE = _lidarData.lidar_q2;
+            lidar_E = _lidarData.lidar_q3;
+            lidar_SE = _lidarData.lidar_q4;
+            lidar_S = _lidarData.lidar_q5;
+            lidar_SW = _lidarData.lidar_q6;
+            lidar_W = _lidarData.lidar_q7;
+            lidar_NW = _lidarData.lidar_q8;
 
             lidar_preSubMessage = _mqttManager._lidarSubMessage;
         }
